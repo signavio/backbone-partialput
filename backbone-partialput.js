@@ -21,21 +21,45 @@
         root.Backbone = factory(root, {}, root._, root.Backbone);
     }
 
-}(this, function(root, exports, _, Backbone) {
+}(this, function(root, exports, _, BackboneBase) {
 
-    var BackboneOriginal = {
-        set: Backbone.Model.prototype.set,
-        sync: Backbone.Model.prototype.sync
+    var Backbone = _.extend({}, BackboneBase);
+
+    // Helper function calculating an object containing only those attributes from newAttrs
+    // that have different values compared to originalAttrs
+    var getChangedAttrs = function(originalAttrs, newAttrs) {
+        var result = {};
+        for(key in newAttrs) {
+            if(!_.isEqual(originalAttrs[key], newAttrs[key])) {
+                result[key] = newAttrs[key];
+            }
+        }
+        return result;
     };
 
-    Backbone.Model = Backbone.Model.extend({
+    Backbone.Model = BackboneBase.Model.extend({
 
-        set: function(key, val, options) {
-            var attrs, result;
-            if(key === null) return this;
+        // Symmetric to Backbone's `model.changedAttributes()`,
+        // except that this returns a hash of the attributes that have
+        // changed since the last sync, or `false` if there are none.
+        // Like `changedAttributes`, an external attributes hash can be
+        // passed in, returning the attributes in that hash which differ
+        // from the model's attributes at the time of the last sync.
+        unsavedAttributes: function(attrs) {
+            attrs = attrs || this.attributes;
+            if(!this._syncedAttributes) return attrs;
+
+            return getChangedAttrs(this._syncedAttributes, attrs);
+        },
+
+        // Override #save to make sure that only the partial JSON representation is submitted
+        // and that the server response to POST and PUT requests is always parsed to contain
+        // only attributes that have been changed on the server
+        save: function(key, val, options) {
+            var model = this;
 
             // Handle both `"key", value` and `{key: value}` -style arguments.
-            if(typeof key === 'object') {
+            if(key == null || typeof key === 'object') {
                 attrs = key;
                 options = val;
             } else {
@@ -44,67 +68,83 @@
 
             options || (options = {});
 
-            // Delegate to Backbone's original set.
-            result = BackboneOriginal.set.apply(this, arguments);
+            if(options.partial === void 0) options.partial = true;
+            if(options.partial) options.partialBaseline = _.clone(this.attributes);
 
-            if(!options.silent) {
-                for(key in attrs) {
-                    val = attrs[key];
+            // This callback will be executed after the attributes from the response
+            // have been set to the model, before `sync` is triggered
+            options.success = function(resp) {
+                model._resetSyncedAttributes();
+            };
 
-                }
+            var result = BackboneBase.Model.prototype.save.call(this, attrs, options);
+
+            return result;
+        },
+
+        // Override #fetch to set the `partial` flag in the options
+        fetch: function(options) {
+            var model = this;
+
+            options || (options = {});
+            if(options.partial === void 0) options.partial = !options.reset;
+
+            // This callback will be executed after the attributes from the response
+            // have been set to the model, before `sync` is triggered
+            options.success = function(resp) {
+                model._resetSyncedAttributes();
+            };
+
+            return BackboneBase.Model.prototype.fetch.call(this, options);
+        },
+
+        // If a snapshot of the attributes hash is passed in option `partialBaseline`,
+        // this will return only those attributes from the parsed response, which have
+        // changed in comparison to the snapshop baseline
+        parse: function(resp, options) {
+            var result = BackboneBase.Model.prototype.parse.apply(this, arguments);
+
+            options || (options = {});
+            if(options.partial && options.partialBaseline) {
+                return getChangedAttrs(
+                    options.partialBaseline,
+                    result
+                );
+            } else {
+                return result;
             }
+        },
 
+        // Override to add support for the `partial` option:
+        // When partial is set to true, the JSON will contain only the unsaved
+        // attributes in addition to the ID attribute
+        toJSON: function(options) {
+            var attributes, result, id;
+
+            options || (options = {});
+            if(options.partial) {
+                id = this.get(this.idAttribute || "id");
+                attributes = this.attributes;
+
+                // Calculate the partial JSON representation
+                // and make sure the ID attribute is preserved
+                this.attributes = this.unsavedAttributes();
+                this.attributes[this.idAttribute || "id"] = id;
+                result = BackboneBase.Model.prototype.toJSON.apply(this, arguments);
+
+                // Restore attributes
+                this.attributes = attributes;
+            } else {
+                result = BackboneBase.Model.prototype.toJSON.apply(this, arguments);
+            }
             return result;
         },
 
-
-        // Override #sync to make sure the server response is always filtered to contain only
-        // attributes that have been changed on the server
-        sync: function(method, obj, options) {
-            var attrsSnapshot = _.clone(this.attributes);
-
-            if(options.filterRespn)
-            options = _.wrap(options.success, function(originalSuccess, data, textStatus, jqXHR) {
-                var serverAttrs = model.parse(resp, options);
-            });
-            var result = BackboneOriginal.sync.apply(this, arguments);
-
-            return result;
-        },
-
-        save: function(key, val, options) {
-            var attributes = this.attributes;
-            this.attributes = this.unsavedAttributes();
-
-            options = _.wrap(options.success, function(originalSuccess, data, textStatus, jqXHR) {
-                var respAttrs = model.parse(resp, options);
-            });
-            var result = BackboneOriginal.save.apply(this, arguments);
-
-            this.attributes = attributes;
-            return result;
-        },
-
-        _resetUnsavedAttributes: function() {
+        // Internal method that is called directly after attributes have been set from a server response
+        _resetSyncedAttributes: function() {
             this._syncedAttributes = _.clone(this.attributes);
-            this._unsavedAttributes = {};
-        },
+        }
 
-        // Symmetric to Backbone's `model.changedAttributes()`,
-        // except that this returns a hash of the model's attributes that
-        // have changed since the last sync, or `false` if there are none.
-        // Like `changedAttributes`, an external attributes hash can be
-        // passed in, returning the attributes in that hash which differ
-        // from the model.
-        unsavedAttributes: function(attrs) {
-            if (!attrs) return _.isEmpty(this._unsavedChanges) ? false : _.clone(this._unsavedChanges);
-            var val, changed = false, old = this._unsavedChanges;
-            for (var attr in attrs) {
-                if (_.isEqual(old[attr], (val = attrs[attr]))) continue;
-                (changed || (changed = {}))[attr] = val;
-            }
-            return changed;
-        },
 
     });
 
