@@ -39,6 +39,11 @@
 
     Backbone.Model = BackboneBase.Model.extend({
 
+        // Attributes listed in this array will always be included in the
+        // model's partial JSON representation, also if they have not been
+        // changed since the latest sync
+        partialAttributesCore: [ 'id' ],
+
         // Symmetric to Backbone's `model.changedAttributes()`,
         // except that this returns a hash of the attributes that have
         // changed since the last sync, or `false` if there are none.
@@ -127,8 +132,11 @@
                 attributes = this.attributes;
 
                 // Calculate the partial JSON representation
-                // and make sure the ID attribute is preserved
-                this.attributes = this.unsavedAttributes();
+                // and make sure the core attributes are included
+                this.attributes = _.extend(
+                    this.unsavedAttributes(),
+                    _.pick(attributes, this.partialAttributesCore)
+                );
                 this.attributes[this.idAttribute || "id"] = id;
                 result = BackboneBase.Model.prototype.toJSON.apply(this, arguments);
 
