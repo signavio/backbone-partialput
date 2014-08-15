@@ -111,13 +111,18 @@
 
             options || (options = {});
             if(options.partial && options.partialBaseline) {
-                return getChangedAttrs(
+                result = getChangedAttrs(
                     options.partialBaseline,
                     result
                 );
-            } else {
-                return result;
+
+                // important: remove the partial baseline after the first parse,
+                // otherwise nested constructor calls, might use a wrong baseline in their
+                // parse() invocations
+                delete options.partialBaseline;
             }
+
+            return result;
         },
 
         // Override to add support for the `partial` option:
