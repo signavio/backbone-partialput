@@ -96,8 +96,12 @@
 
             // This callback will be executed after the attributes from the response
             // have been set to the model, before `sync` is triggered
+            var success = options.success;
             options.success = function(resp) {
                 model._resetSyncedAttributes();
+                if(success) {
+                    success(resp);
+                }
             };
 
             return BackboneBase.Model.prototype.fetch.call(this, options);
