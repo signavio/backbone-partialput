@@ -73,6 +73,13 @@
 
             options || (options = {});
 
+            // If there are no unsaved changes, do not dispatch a request,
+            // but immediately call the `success` callback
+            if(_.isEmpty(this.unsavedAttributes())) {
+                if(options.success) options.success({});
+                return;
+            }
+
             if(options.partial === void 0) options.partial = true;
             if(options.partial) options.partialBaseline = _.clone(this.attributes);
 
