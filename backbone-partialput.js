@@ -75,7 +75,7 @@
 
             // If there are no unsaved changes, do not dispatch a request,
             // but immediately call the `success` callback
-            if(_.isEmpty(this.unsavedAttributes())) {
+            if(_.isEmpty(this.unsavedAttributes()) && !this.isNew()) {
                 if(options.success) options.success({});
                 return;
             }
