@@ -57,6 +57,11 @@
             return getChangedAttrs(this._syncedAttributes, attrs);
         },
 
+        // Has the model changes, that have not been synced to the server?
+        hasUnsavedChanges: function() {
+            return !_.isEmpty(this.unsavedAttributes());
+        },
+
         // Override #save to make sure that only the partial JSON representation is submitted
         // and that the server response to POST and PUT requests is always parsed to contain
         // only attributes that have been changed on the server
@@ -75,7 +80,8 @@
 
             // If there are no unsaved changes, do not dispatch a request,
             // but immediately call the `success` callback
-            if(_.isEmpty(this.unsavedAttributes()) && !this.isNew()) {
+
+            if(!this.isNew() && !this.hasUnsavedChanges(options)) {
                 if(options.success) options.success({});
                 return;
             }
