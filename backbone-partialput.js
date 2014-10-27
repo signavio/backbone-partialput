@@ -93,7 +93,7 @@
             // have been set to the model, before `sync` is triggered
             var success = options.success;
             options.success = function(resp) {
-                model._resetSyncedAttributes();
+                model._resetSyncedAttributes(options);
                 if(success) {
                     success(resp);
                 }
@@ -115,7 +115,7 @@
             // have been set to the model, before `sync` is triggered
             var success = options.success;
             options.success = function(resp) {
-                model._resetSyncedAttributes();
+                model._resetSyncedAttributes(options);
                 if(success) {
                     success(resp);
                 }
@@ -163,6 +163,7 @@
                     this.unsavedAttributes(),
                     _.pick(attributes, this.partialAttributesCore)
                 );
+                // Addtionally ensure the id attribute is included
                 this.attributes[this.idAttribute || "id"] = id;
                 result = BackboneBase.Model.prototype.toJSON.apply(this, arguments);
 
