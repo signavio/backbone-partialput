@@ -80,7 +80,6 @@
 
             // If there are no unsaved changes, do not dispatch a request,
             // but immediately call the `success` callback
-
             if(!this.isNew() && !this.hasUnsavedChanges(options)) {
                 if(options.success) options.success({});
                 return;
@@ -93,13 +92,34 @@
             // have been set to the model, before `sync` is triggered
             var success = options.success;
             options.success = function(resp) {
-                model._resetSyncedAttributes(options);
+                // Reset synced attributes again, so that changes coming from the server are
+                // considered to be saved.
+                model._resetSyncedAttributes();
                 if(success) {
                     success(resp);
                 }
             };
 
+            // In case of error set the synced attributes back to the values before the object
+            // was pro-actively reset when the save request was dispatched.
+            var error = options.error;
+            options.error = function(resp) {
+                // Only restore original value if no other concurrent save requests
+                // have reset the synced attributes in the meantime.
+                if(_.isEqual(model._syncedAttributes, options.partialBaseline)) {
+                    model._syncedAttributes = previousSyncedAttributes;
+                }
+                if(error) {
+                    error(resp);
+                }
+            };
+
             var result = BackboneBase.Model.prototype.save.call(this, attrs, options);
+
+            // Pro-actively reset _syncedAttributes so that concurrent saves will only go through
+            // if attributes have actually been changed
+            var previousSyncedAttributes = this._syncedAttributes;
+            this._resetSyncedAttributes();
 
             return result;
         },
@@ -115,7 +135,7 @@
             // have been set to the model, before `sync` is triggered
             var success = options.success;
             options.success = function(resp) {
-                model._resetSyncedAttributes(options);
+                model._resetSyncedAttributes();
                 if(success) {
                     success(resp);
                 }
