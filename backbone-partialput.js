@@ -22,7 +22,7 @@
     }
 
 }(this, function(root, exports, _, BackboneBase) {
-
+    
     var Backbone = _.extend({}, BackboneBase);
 
     // Helper function calculating an object containing only those attributes from newAttrs
@@ -129,19 +129,61 @@
             var model = this;
 
             options || (options = {});
-            if(options.partial === void 0) options.partial = !options.reset;
+            //if(options.partial === void 0) options.partial = !options.reset;
 
             // This callback will be executed after the attributes from the response
             // have been set to the model, before `sync` is triggered
             var success = options.success;
             options.success = function(resp) {
+
                 model._resetSyncedAttributes();
+
                 if(success) {
                     success(resp);
                 }
+
             };
 
             return BackboneBase.Model.prototype.fetch.call(this, options);
+        },
+
+        // Override #set to add support for `clear` option. If `clear` is set to true,
+        // the current attributes hash will be cleared before the new attributes passed
+        // in the arguments are set. 
+        set: function(key, val, options) {
+            var keyDiff, i, l, result;
+
+            if(key === null) return this;
+
+            // Handle both `"key", value` and `{key: value}` -style arguments.
+            if(typeof key === 'object') {
+                attrs = key;
+                options = val;
+            } else {
+                (attrs = {})[key] = val;
+            }
+
+            options || (options = {});
+
+            // If `clear` is set, we first set all attrs to be cleared to undefined,
+            // thus letting Backbone's native #set trigger all appropriate attr change events. 
+            if(options.clear) {
+                keyDiff = _.difference(_.keys(this.attributes), _.keys(attrs));
+                for(i=0, l=keyDiff.length; i<l; ++i) {
+                    attrs[keyDiff[i]] = void 0;
+                }
+            }
+
+            result = BackboneBase.Model.prototype.set.apply(this, [attrs, options]);
+
+            // Make sure to properly delete the attributes
+            if(result && options.clear) {
+                for(i=0, l=keyDiff.length; i<l; ++i) {
+                    delete this.attributes[keyDiff[i]];
+                }
+            }
+
+            return result;
         },
 
         // If a snapshot of the attributes hash is passed in option `partialBaseline`,
