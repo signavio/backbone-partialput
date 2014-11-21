@@ -22,14 +22,14 @@
     }
 
 }(this, function(root, exports, _, BackboneBase) {
-    
+
     var Backbone = _.extend({}, BackboneBase);
 
     // Helper function calculating an object containing only those attributes from newAttrs
     // that have different values compared to originalAttrs
     var getChangedAttrs = function(originalAttrs, newAttrs) {
         var result = {};
-        for(key in newAttrs) {
+        for(var key in newAttrs) {
             if(!_.isEqual(originalAttrs[key], newAttrs[key])) {
                 result[key] = newAttrs[key];
             }
@@ -51,7 +51,7 @@
         // passed in, returning the attributes in that hash which differ
         // from the model's attributes at the time of the last sync.
         unsavedAttributes: function(attrs) {
-            attrs = attrs || this.attributes;
+            attrs = attrs || this.attributes;
             if(!this._syncedAttributes) return attrs;
 
             return getChangedAttrs(this._syncedAttributes, attrs);
@@ -67,9 +67,10 @@
         // only attributes that have been changed on the server
         save: function(key, val, options) {
             var model = this;
+            var attrs;
 
             // Handle both `"key", value` and `{key: value}` -style arguments.
-            if(key == null || typeof key === 'object') {
+            if(key === null || typeof key === 'object') {
                 attrs = key;
                 options = val;
             } else {
@@ -149,7 +150,7 @@
 
         // Override #set to add support for `clear` option. If `clear` is set to true,
         // the current attributes hash will be cleared before the new attributes passed
-        // in the arguments are set. 
+        // in the arguments are set.
         set: function(key, val, options) {
             var keyDiff, i, l, result;
 
@@ -166,7 +167,7 @@
             options || (options = {});
 
             // If `clear` is set, we first set all attrs to be cleared to undefined,
-            // thus letting Backbone's native #set trigger all appropriate attr change events. 
+            // thus letting Backbone's native #set trigger all appropriate attr change events.
             if(options.clear) {
                 keyDiff = _.difference(_.keys(this.attributes), _.keys(attrs));
                 for(i=0, l=keyDiff.length; i<l; ++i) {
