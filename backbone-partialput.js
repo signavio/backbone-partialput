@@ -70,7 +70,7 @@
             var attrs;
 
             // Handle both `"key", value` and `{key: value}` -style arguments.
-            if(key === null || typeof key === 'object') {
+            if(_.isUndefined(key) || _.isNull(key) || typeof key === 'object') {
                 attrs = key;
                 options = val;
             } else {
