@@ -152,7 +152,7 @@
         // the current attributes hash will be cleared before the new attributes passed
         // in the arguments are set.
         set: function(key, val, options) {
-            var keyDiff, i, l, result;
+            var keyDiff, i, l, result, attrs;
 
             if(key === null) return this;
 
