@@ -24,12 +24,13 @@
     "jquery": "~2.1.3",
     "chai": "~1.10.0",
     "sinon": "~1.12.2",
-    "sinon-chai": "~2.6.0"
+    "sinon-chai": "~2.6.0",
+    "uglify-js": "~2.4.16"
   },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start karma.conf.js",
-    "build": "uglifyjs backbone-partialput.js --mangle --source-map backbone-partialput-min.map -o backbone-partialput-min.js",
-    "doc": "docco backbone-partialput.js",
+    "build": "./node_modules/uglify-js/bin/uglifyjs backbone-partialput.js --mangle --source-map backbone-partialput-min.js.map -o backbone-partialput-min.js",
+    "doc": "./node_modules/docco/bin/docco backbone-partialput.js",
     "lint": "jsl -nofilelisting -nologo -conf docs/jsl.conf -process backbone-partialput.js"
   },
   "main": "backbone-partialput.js",
