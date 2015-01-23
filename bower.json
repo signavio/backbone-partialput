@@ -6,5 +6,5 @@
     "underscore"  : ">=1.5.0",
     "backbone"	  : ">=1.1.2"
   },
-  "ignore"        : ["backbone-partialput.min.js", "docs", "examples", "specs", "*.map"]
+  "ignore"        : ["backbone-partialput-min.js", "backbone-partialput-min.js.map", "docs", "test"]
 }
