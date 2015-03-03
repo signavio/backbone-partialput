@@ -202,6 +202,32 @@ define(function(require) {
        
         describe("#set", function() {
 
+            it("should not set unsaved attributes when the `protectUnsaved` option is set to true", function() {
+                var a1 = new A({
+                    id: 1,
+                    title: "a1",
+                    description: "this is a1"
+                });
+                var json = a1.toJSON();
+
+                a1.set("title", "a1_changed", { protectUnsaved: true });
+                a1.set({
+                    title: "a1_changed_again",
+                    description: "desc_changed"
+                }, { protectUnsaved: true });
+
+                expect(a1.get("title")).to.equal("a1");
+                expect(a1.toJSON()).to.deep.equal(json);
+
+                a1.save();
+                server.requests[0].respond(200, { "Content-Type": "application/json" }, 
+                    JSON.stringify(json)
+                );
+
+                a1.set("title", "a1_changed", { protectUnsaved: true });
+                expect(a1.get("title")).to.equal("a1_changed");
+            });
+
 
         // Potential extension 
         //    it("should trigger 'conflict' and 'conflict:attr' if an attribute change coming from the server overwrites a dirty attribute value", function(done) {

@@ -47,8 +47,8 @@
         // Symmetric to Backbone's `model.changedAttributes()`,
         // except that this returns a hash of the attributes that have
         // changed since the last sync, or `false` if there are none.
-        // Like `changedAttributes`, an external attributes hash can be
-        // passed in, returning the attributes in that hash which differ
+        // Just as for the `#changedAttributes` method, an external attributes hash 
+        // can be passed in, returning the attributes in that hash which differ
         // from the model's attributes at the time of the last sync.
         unsavedAttributes: function(attrs) {
             attrs = attrs || this.attributes;
@@ -171,7 +171,7 @@
         },
 
         // Override to add support for the `partial` option:
-        // When partial is set to true, the JSON will contain only the unsaved
+        // When `partial` is set to true, the JSON will contain only the unsaved
         // attributes in addition to the ID attribute
         toJSON: function(options) {
             var attributes, result, id;
@@ -197,6 +197,31 @@
                 result = BackboneBase.Model.prototype.toJSON.apply(this, arguments);
             }
             return result;
+        },
+
+        // Override to add support for `protectUnsaved` option:
+        // When `protectUnsaved` is set to true all unsaved attribute will
+        // be protected from being set.
+        set: function(key, val, options) {
+            var attrs, unsavedKeys;
+            if(key === null) return this;
+
+            // Handle both `"key", value` and `{key: value}` -style arguments.
+            if(typeof key === 'object') {
+                attrs = key;
+                options = val;
+            } else {
+                (attrs = {})[key] = val;
+            }
+
+            options || (options = {});
+
+            if(options.protectUnsaved) {
+                unsavedKeys = _.keys(this.unsavedAttributes());
+                attrs = _.omit(attrs, unsavedKeys);
+            }
+
+            return BackboneBase.Model.prototype.set.apply(this, [attrs, options]);
         },
 
         // Internal method that is called directly after attributes have been set from a server response

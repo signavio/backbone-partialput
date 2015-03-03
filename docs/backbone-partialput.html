@@ -164,8 +164,8 @@ changed since the latest sync</p>
               <p>Symmetric to Backbone’s <code>model.changedAttributes()</code>,
 except that this returns a hash of the attributes that have
 changed since the last sync, or <code>false</code> if there are none.
-Like <code>changedAttributes</code>, an external attributes hash can be
-passed in, returning the attributes in that hash which differ
+Just as for the <code>#changedAttributes</code> method, an external attributes hash 
+can be passed in, returning the attributes in that hash which differ
 from the model’s attributes at the time of the last sync.</p>
 
             </div>
@@ -470,7 +470,7 @@ parse() invocations</p>
                 <a class="pilcrow" href="#section-23">&#182;</a>
               </div>
               <p>Override to add support for the <code>partial</code> option:
-When partial is set to true, the JSON will contain only the unsaved
+When <code>partial</code> is set to true, the JSON will contain only the unsaved
 attributes in addition to the ID attribute</p>
 
             </div>
@@ -546,6 +546,55 @@ and make sure the core attributes are included</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Override to add support for <code>protectUnsaved</code> option:
+When <code>protectUnsaved</code> is set to true all unsaved attribute will
+be protected from being set.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        set: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key, val, options)</span> </span>{
+            <span class="hljs-keyword">var</span> attrs, unsavedKeys;
+            <span class="hljs-keyword">if</span>(key === <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Handle both <code>&quot;key&quot;, value</code> and <code>{key: value}</code> -style arguments.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(<span class="hljs-keyword">typeof</span> key === <span class="hljs-string">'object'</span>) {
+                attrs = key;
+                options = val;
+            } <span class="hljs-keyword">else</span> {
+                (attrs = {})[key] = val;
+            }
+
+            options || (options = {});
+
+            <span class="hljs-keyword">if</span>(options.protectUnsaved) {
+                unsavedKeys = _.keys(<span class="hljs-keyword">this</span>.unsavedAttributes());
+                attrs = _.omit(attrs, unsavedKeys);
+            }
+
+            <span class="hljs-keyword">return</span> BackboneBase.Model.prototype.set.apply(<span class="hljs-keyword">this</span>, [attrs, options]);
+        },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
               </div>
               <p>Internal method that is called directly after attributes have been set from a server response</p>
 
