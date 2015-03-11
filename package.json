@@ -36,7 +36,7 @@
     "lint": "jsl -nofilelisting -nologo -conf docs/jsl.conf -process backbone-partialput.js"
   },
   "main": "backbone-partialput.js",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "license": "MIT",
   "repository": {
     "type": "git",
