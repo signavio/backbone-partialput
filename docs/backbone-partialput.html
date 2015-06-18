@@ -164,7 +164,7 @@ changed since the latest sync</p>
               <p>Symmetric to Backbone’s <code>model.changedAttributes()</code>,
 except that this returns a hash of the attributes that have
 changed since the last sync, or <code>false</code> if there are none.
-Just as for the <code>#changedAttributes</code> method, an external attributes hash 
+Just as for the <code>#changedAttributes</code> method, an external attributes hash
 can be passed in, returning the attributes in that hash which differ
 from the model’s attributes at the time of the last sync.</p>
 
@@ -192,6 +192,22 @@ from the model’s attributes at the time of the last sync.</p>
             
             <div class="content"><div class='highlight'><pre>        hasUnsavedChanges: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
             <span class="hljs-keyword">return</span> !_.isEmpty(<span class="hljs-keyword">this</span>.unsavedAttributes());
+        },
+
+        discardUnsavedChanges: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">this</span>.set(<span class="hljs-keyword">this</span>._syncedAttributes, {
+                silent: <span class="hljs-literal">true</span>
+            });
+
+            _.each(<span class="hljs-keyword">this</span>.attributes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>._syncedAttributes[key]) {
+                    <span class="hljs-keyword">return</span>;
+                }
+
+                <span class="hljs-keyword">this</span>.unset(key, { silent: <span class="hljs-literal">true</span> });
+            }, <span class="hljs-keyword">this</span>);
+
+            <span class="hljs-keyword">this</span>.trigger(<span class="hljs-string">'change'</span>);
         },</pre></div></div>
             
         </li>
