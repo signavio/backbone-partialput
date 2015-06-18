@@ -47,7 +47,7 @@
         // Symmetric to Backbone's `model.changedAttributes()`,
         // except that this returns a hash of the attributes that have
         // changed since the last sync, or `false` if there are none.
-        // Just as for the `#changedAttributes` method, an external attributes hash 
+        // Just as for the `#changedAttributes` method, an external attributes hash
         // can be passed in, returning the attributes in that hash which differ
         // from the model's attributes at the time of the last sync.
         unsavedAttributes: function(attrs) {
@@ -60,6 +60,22 @@
         // Has the model changes, that have not been synced to the server?
         hasUnsavedChanges: function() {
             return !_.isEmpty(this.unsavedAttributes());
+        },
+
+        discardUnsavedChanges: function() {
+            this.set(this._syncedAttributes, {
+                silent: true
+            });
+
+            _.each(this.attributes, function(value, key) {
+                if(this._syncedAttributes[key]) {
+                    return;
+                }
+
+                this.unset(key, { silent: true });
+            }, this);
+
+            this.trigger('change');
         },
 
         // Override #save to make sure that only the partial JSON representation is submitted

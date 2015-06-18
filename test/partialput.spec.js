@@ -199,7 +199,7 @@ define(function(require) {
 
         });
 
-       
+
         describe("#set", function() {
 
             it("should not set unsaved attributes when the `protectUnsaved` option is set to true", function() {
@@ -220,7 +220,7 @@ define(function(require) {
                 expect(a1.toJSON()).to.deep.equal(json);
 
                 a1.save();
-                server.requests[0].respond(200, { "Content-Type": "application/json" }, 
+                server.requests[0].respond(200, { "Content-Type": "application/json" },
                     JSON.stringify(json)
                 );
 
@@ -229,7 +229,7 @@ define(function(require) {
             });
 
 
-        // Potential extension 
+        // Potential extension
         //    it("should trigger 'conflict' and 'conflict:attr' if an attribute change coming from the server overwrites a dirty attribute value", function(done) {
         //        var a1 = new A({
         //            id: 1,
@@ -256,6 +256,47 @@ define(function(require) {
         //            done();
         //        });
         //    });
+
+        });
+
+        describe("#discardUnsavedChanges", function() {
+
+            it("should reset values to the last version.", function() {
+                var a = new A({
+                    id: "a1",
+                    title: "foo"
+                });
+                a.save();
+
+                a.discardUnsavedChanges();
+
+                expect(a.get("title")).to.equal("foo");
+                expect(a.id).to.equal("a1");
+
+                a.set("title", "bar");
+
+                expect(a.get("title")).to.equal("bar");
+
+                a.discardUnsavedChanges();
+
+                expect(a.get("title")).to.equal("foo");
+            });
+
+            it("should remove values which were not there initially.", function() {
+                var a = new A();
+
+                a.save();
+
+                expect(a.get("title")).to.be.undefined;
+
+                a.set("title", "foo");
+
+                expect(a.get("title")).to.equal("foo");
+
+                a.discardUnsavedChanges();
+
+                expect(a.get("title")).to.be.undefined;
+            });
 
         });
 
