@@ -288,7 +288,7 @@ have been set to the model, before <code>sync</code> is triggered</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">var</span> success = options.success;
-            options.success = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resp)</span> </span>{</pre></div></div>
+            options.success = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(model, resp, options)</span> </span>{</pre></div></div>
             
         </li>
         
@@ -304,9 +304,10 @@ considered to be saved.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>                model._resetSyncedAttributes();
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">var</span> attrsChangedByBackend = model.parse(resp, options);
+                _.extend(model._syncedAttributes, attrsChangedByBackend);
                 <span class="hljs-keyword">if</span>(success) {
-                    success(resp);
+                    success.call(options.context, model, resp, options);
                 }
             };</pre></div></div>
             
@@ -325,7 +326,7 @@ was pro-actively reset when the save request was dispatched.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">var</span> error = options.error;
-            options.error = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resp)</span> </span>{</pre></div></div>
+            options.error = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(model, resp, options)</span> </span>{</pre></div></div>
             
         </li>
         
@@ -345,7 +346,7 @@ have reset the synced attributes in the meantime.</p>
                     model._syncedAttributes = previousSyncedAttributes;
                 }
                 <span class="hljs-keyword">if</span>(error) {
-                    error(resp);
+                    error.call(options.context, model, resp, options);
                 }
             };
 
