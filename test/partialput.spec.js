@@ -76,7 +76,7 @@ define(function(require) {
                 expect(attrs).to.deep.equal({ title: "new_a_changed" });
             });
 
-            it('should return those attributes that have been changes during the last, now finished save request', function () {
+            it('should return those attributes that have been changed during the last, now finished save request', function () {
                 var a = new A({
                     title: "new_a",
                     description: "new_desc"
@@ -95,6 +95,21 @@ define(function(require) {
                 attrs = a.unsavedAttributes();
                 expect(attrs).to.deep.equal({ title: "new_a_changed" });
             });
+
+            it('should not return attributes that have been changed by the server', function () {
+                var a = new A({
+                    title: "new_a",
+                    description: "new_desc"
+                });
+                a.save();
+                
+                server.requests[0].respond(200, { "Content-Type": "application/json" },
+                    JSON.stringify({ title: "new_a_changed" })
+                );
+
+                var attrs = a.unsavedAttributes();
+                expect(attrs).to.be.empty;
+            })
 
         });
 

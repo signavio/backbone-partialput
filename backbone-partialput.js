@@ -108,26 +108,27 @@
             // This callback will be executed after the attributes from the response
             // have been set to the model, before `sync` is triggered
             var success = options.success;
-            options.success = function(resp) {
+            options.success = function(model, resp, options) {
                 // Reset synced attributes again, so that changes coming from the server are
                 // considered to be saved.
-                model._resetSyncedAttributes();
+                var attrsChangedByBackend = model.parse(resp, options);
+                _.extend(model._syncedAttributes, attrsChangedByBackend);
                 if(success) {
-                    success(resp);
+                    success.call(options.context, model, resp, options);
                 }
             };
 
             // In case of error set the synced attributes back to the values before the object
             // was pro-actively reset when the save request was dispatched.
             var error = options.error;
-            options.error = function(resp) {
+            options.error = function(model, resp, options) {
                 // Only restore original value if no other concurrent save requests
                 // have reset the synced attributes in the meantime.
                 if(_.isEqual(model._syncedAttributes, options.partialBaseline)) {
                     model._syncedAttributes = previousSyncedAttributes;
                 }
                 if(error) {
-                    error(resp);
+                    error.call(options.context, model, resp, options);
                 }
             };
 
