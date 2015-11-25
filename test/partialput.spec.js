@@ -74,7 +74,27 @@ define(function(require) {
                 a.set("title", "new_a_changed");
                 attrs = a.unsavedAttributes();
                 expect(attrs).to.deep.equal({ title: "new_a_changed" });
-            })
+            });
+
+            it('should return those attributes that have been changes during the last, now finished save request', function () {
+                var a = new A({
+                    title: "new_a",
+                    description: "new_desc"
+                });
+                a.save();
+
+                var attrs = a.unsavedAttributes();
+                expect(attrs).to.be.empty;
+
+                a.set("title", "new_a_changed");
+                
+                server.requests[0].respond(200, { "Content-Type": "application/json" },
+                    JSON.stringify({})
+                );
+
+                attrs = a.unsavedAttributes();
+                expect(attrs).to.deep.equal({ title: "new_a_changed" });
+            });
 
         });
 
