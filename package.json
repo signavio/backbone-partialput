@@ -39,7 +39,7 @@
     "prebuild": "npm run test"
   },
   "main": "backbone-partialput.js",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "license": "MIT",
   "repository": {
     "type": "git",
