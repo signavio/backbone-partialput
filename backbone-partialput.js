@@ -67,13 +67,14 @@
                 silent: true
             });
 
+            var that = this
             _.each(this.attributes, function(value, key) {
-                if(this._syncedAttributes[key]) {
+                if(that._syncedAttributes[key]) {
                     return;
                 }
 
-                this.unset(key, { silent: true });
-            }, this);
+                that.unset(key, { silent: true });
+            });
 
             this.trigger('change');
         },
